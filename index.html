@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFA to DFA Converter</title>
+    <meta name="description" content="Interactive NFA to DFA converter using subset construction. Visualize how nondeterministic automata are converted to deterministic automata step-by-step.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Particle Background Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Neural Network Background -->
+    <canvas id="neural-canvas"></canvas>
+
+    <!-- Header -->
+    <header id="app-header">
+        <div class="header-glow"></div>
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 48 48" fill="none">
+                        <circle cx="14" cy="24" r="8" stroke="url(#g1)" stroke-width="2" fill="none"/>
+                        <circle cx="34" cy="14" r="6" stroke="url(#g1)" stroke-width="2" fill="none"/>
+                        <circle cx="34" cy="34" r="6" stroke="url(#g1)" stroke-width="2" fill="none"/>
+                        <path d="M22 22L28 16" stroke="url(#g1)" stroke-width="1.5"/>
+                        <path d="M22 26L28 32" stroke="url(#g1)" stroke-width="1.5"/>
+                        <path d="M22 24L28 14" stroke="url(#g2)" stroke-width="1" stroke-dasharray="3 2"/>
+                        <path d="M22 24L28 34" stroke="url(#g2)" stroke-width="1" stroke-dasharray="3 2"/>
+                        <defs>
+                            <linearGradient id="g1" x1="0" y1="0" x2="48" y2="48">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="g2" x1="0" y1="0" x2="48" y2="48">
+                                <stop offset="0%" stop-color="#f472b6"/>
+                                <stop offset="100%" stop-color="#818cf8"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>NFA to DFA Converter</h1>
+                    <span class="subtitle">Subset Construction Visualizer</span>
+                </div>
+            </div>
+            <div class="student-badge">
+                <span class="student-name">Vipul</span>
+                <span class="student-roll">2024UCS1515</span>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn active" data-section="language" id="nav-language">
+                    <span class="nav-icon">✦</span> Language
+                </button>
+                <button class="nav-btn" data-section="input" id="nav-input">
+                    <span class="nav-icon">⊞</span> Define NFA
+                </button>
+                <button class="nav-btn" data-section="algorithm" id="nav-algorithm">
+                    <span class="nav-icon">⚙</span> Algorithm
+                </button>
+                <button class="nav-btn" data-section="visualization" id="nav-visualization">
+                    <span class="nav-icon">◎</span> Visualize
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+        <!-- ===================== SECTION 0: LANGUAGE INPUT ===================== -->
+        <section id="section-language" class="content-section active">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="title-accent">✦</span> Describe Your Language
+                </h2>
+                <p class="section-desc">Type a language description in plain English or a regular expression — the NFA and DFA will be generated automatically</p>
+            </div>
+
+            <!-- Mode Toggle -->
+            <div class="lang-mode-toggle">
+                <button class="mode-btn active" id="mode-natural" data-mode="natural">
+                    <span class="mode-icon">💬</span> Natural Language
+                </button>
+                <button class="mode-btn" id="mode-regex" data-mode="regex">
+                    <span class="mode-icon">⟨⟩</span> Regex
+                </button>
+            </div>
+
+            <!-- Natural Language Input -->
+            <div class="lang-input-card" id="lang-natural-panel">
+                <div class="lang-input-row">
+                    <div class="lang-input-icon">✦</div>
+                    <input type="text" id="lang-input" class="text-input lang-text-input" placeholder='e.g. &quot;Strings over {0,1} ending with 01&quot;'>
+                </div>
+                <div class="lang-examples">
+                    <span class="lang-examples-label">Try:</span>
+                    <button class="lang-chip" data-example="Strings over {0,1} ending with 01">ending with 01</button>
+                    <button class="lang-chip" data-example="Strings over {a,b} starting with ab">starting with ab</button>
+                    <button class="lang-chip" data-example="Strings over {0,1} containing 101">containing 101</button>
+                    <button class="lang-chip" data-example="Strings over {0,1} with even number of 0s">even 0s</button>
+                    <button class="lang-chip" data-example="Strings over {a,b} with odd number of b">odd b's</button>
+                    <button class="lang-chip" data-example="Strings over {0,1} with length divisible by 3">length % 3</button>
+                    <button class="lang-chip" data-example="Strings over {0,1} starting with 1 and ending with 0">start 1 end 0</button>
+                    <button class="lang-chip" data-example="Strings over {a,b} not containing aa">no aa</button>
+                </div>
+            </div>
+
+            <!-- Regex Input -->
+            <div class="lang-input-card hidden" id="lang-regex-panel">
+                <div class="lang-input-row">
+                    <div class="lang-input-icon" style="font-size:1rem">⟨⟩</div>
+                    <input type="text" id="regex-input" class="text-input lang-text-input" placeholder='e.g. (0+1)*01  or  a(a+b)*b'>
+                </div>
+                <div class="lang-examples">
+                    <span class="lang-examples-label">Try:</span>
+                    <button class="regex-chip" data-regex="(0+1)*01">(0+1)*01</button>
+                    <button class="regex-chip" data-regex="(a+b)*abb">(a+b)*abb</button>
+                    <button class="regex-chip" data-regex="1(0+1)*">1(0+1)*</button>
+                    <button class="regex-chip" data-regex="(0+1)*1(0+1)(0+1)">(0+1)*1(0+1)(0+1)</button>
+                    <button class="regex-chip" data-regex="a*b*">a*b*</button>
+                    <button class="regex-chip" data-regex="(ab+ba)*">(ab+ba)*</button>
+                </div>
+                <p class="hint-text" style="margin-top:12px">Syntax: <code>+</code> = union (OR), <code>*</code> = Kleene star, <code>()</code> = grouping, <code>ε</code> or <code>e</code> = epsilon. Concatenation is implicit.</p>
+            </div>
+
+            <!-- Detected Pattern Display -->
+            <div class="lang-result-grid" id="lang-result-grid" style="display:none">
+                <div class="lang-result-card pattern-card">
+                    <div class="result-card-header">
+                        <span class="result-icon">🔍</span>
+                        <h3>Detected Pattern</h3>
+                    </div>
+                    <div class="result-card-body" id="detected-pattern-body">
+                        <div class="pattern-type" id="pattern-type">—</div>
+                        <div class="pattern-details" id="pattern-details">—</div>
+                    </div>
+                </div>
+                <div class="lang-result-card nfa-summary-card">
+                    <div class="result-card-header">
+                        <span class="result-icon">📋</span>
+                        <h3>Generated NFA</h3>
+                    </div>
+                    <div class="result-card-body" id="generated-nfa-body">
+                        <div class="nfa-summary-grid" id="nfa-summary-grid">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="action-bar" style="margin-top:28px">
+                <button class="btn-primary btn-generate" id="btn-generate">
+                    <span class="btn-icon">🚀</span>
+                    Generate & Convert
+                    <span class="btn-shimmer"></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ===================== SECTION 1: NFA INPUT ===================== -->
+        <section id="section-input" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="title-accent">01</span> Define Your NFA
+                </h2>
+                <p class="section-desc">Configure the states, alphabet, and transitions of your Nondeterministic Finite Automaton</p>
+            </div>
+
+            <div class="input-grid">
+                <!-- States Config -->
+                <div class="input-card" id="card-states">
+                    <div class="card-header">
+                        <div class="card-icon states-icon">Q</div>
+                        <h3>States</h3>
+                    </div>
+                    <div class="card-body">
+                        <label class="input-label">Enter states (comma separated)</label>
+                        <input type="text" id="input-states" class="text-input" placeholder="e.g. q0, q1, q2, q3" value="q0, q1, q2">
+                        <label class="input-label" style="margin-top:12px">Start State</label>
+                        <select id="input-start" class="select-input">
+                            <option value="">— select —</option>
+                        </select>
+                        <label class="input-label" style="margin-top:12px">Accept States (comma separated)</label>
+                        <input type="text" id="input-accept" class="text-input" placeholder="e.g. q2, q3" value="q2">
+                    </div>
+                </div>
+
+                <!-- Alphabet Config -->
+                <div class="input-card" id="card-alphabet">
+                    <div class="card-header">
+                        <div class="card-icon alphabet-icon">Σ</div>
+                        <h3>Alphabet</h3>
+                    </div>
+                    <div class="card-body">
+                        <label class="input-label">Input symbols (comma separated)</label>
+                        <input type="text" id="input-alphabet" class="text-input" placeholder="e.g. a, b" value="a, b">
+                        <div class="epsilon-toggle">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="input-epsilon" checked>
+                                <span class="toggle-slider"></span>
+                                Include ε-transitions
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transitions -->
+                <div class="input-card wide" id="card-transitions">
+                    <div class="card-header">
+                        <h3>δ &nbsp;Transition Function</h3>
+                        <button class="btn-add-transition" id="btn-add-transition">
+                            <span>+</span> Add Transition
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="transition-table-wrapper">
+                            <table class="transition-input-table" id="transition-table">
+                                <thead>
+                                    <tr>
+                                        <th>From State</th>
+                                        <th>Symbol</th>
+                                        <th>To States</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transition-tbody">
+                                    <!-- Rows added dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="hint-text">Tip: For multiple destination states, separate with commas (e.g. q1, q2)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preset Examples -->
+            <div class="presets-bar">
+                <span class="presets-label">Quick Examples:</span>
+                <button class="preset-btn" data-preset="simple" id="preset-simple">Simple NFA</button>
+                <button class="preset-btn" data-preset="epsilon" id="preset-epsilon">ε-NFA</button>
+                <button class="preset-btn" data-preset="complex" id="preset-complex">Complex NFA</button>
+            </div>
+
+            <!-- Action -->
+            <div class="action-bar">
+                <button class="btn-primary btn-convert" id="btn-convert">
+                    <span class="btn-icon">⚡</span>
+                    Convert to DFA
+                    <span class="btn-shimmer"></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ===================== SECTION 2: ALGORITHM ===================== -->
+        <section id="section-algorithm" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="title-accent">02</span> Subset Construction Steps
+                </h2>
+                <p class="section-desc">Watch the algorithm build the DFA state by state using subset construction</p>
+            </div>
+
+            <div class="algo-layout">
+                <!-- Steps Panel -->
+                <div class="algo-steps-panel" id="algo-steps-panel">
+                    <div class="steps-header">
+                        <h3>Construction Steps</h3>
+                        <div class="step-controls">
+                            <button class="step-btn" id="btn-prev-step" disabled title="Previous Step">◀</button>
+                            <span class="step-counter" id="step-counter">0 / 0</span>
+                            <button class="step-btn" id="btn-next-step" title="Next Step">▶</button>
+                            <button class="step-btn" id="btn-auto-play" title="Auto Play">▶▶</button>
+                        </div>
+                    </div>
+                    <div class="steps-list" id="steps-list">
+                        <div class="empty-state">
+                            <p>Define an NFA and click "Convert to DFA" to see the algorithm steps here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DFA Table -->
+                <div class="dfa-table-panel" id="dfa-table-panel">
+                    <h3>DFA Transition Table</h3>
+                    <div class="dfa-table-wrapper">
+                        <table class="dfa-result-table" id="dfa-result-table">
+                            <thead id="dfa-thead"><tr><th>DFA State</th></tr></thead>
+                            <tbody id="dfa-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="dfa-legend">
+                        <span class="legend-item"><span class="legend-dot start"></span> Start</span>
+                        <span class="legend-item"><span class="legend-dot accept"></span> Accept</span>
+                        <span class="legend-item"><span class="legend-dot current"></span> Current</span>
+                        <span class="legend-item"><span class="legend-dot dead"></span> Dead/Trap</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== SECTION 3: VISUALIZATION ===================== -->
+        <section id="section-visualization" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="title-accent">03</span> Automata Visualization
+                </h2>
+                <p class="section-desc">Graphical comparison of the original NFA and the constructed DFA</p>
+            </div>
+
+            <div class="viz-container">
+                <div class="viz-panel" id="viz-nfa-panel">
+                    <div class="viz-panel-header">
+                        <h3>Original NFA</h3>
+                        <div class="viz-controls">
+                            <button class="viz-btn" id="btn-zoom-in-nfa" title="Zoom In">+</button>
+                            <button class="viz-btn" id="btn-zoom-out-nfa" title="Zoom Out">−</button>
+                            <button class="viz-btn" id="btn-reset-nfa" title="Reset View">⟲</button>
+                        </div>
+                    </div>
+                    <canvas id="canvas-nfa" width="600" height="450"></canvas>
+                </div>
+                <div class="viz-divider">
+                    <div class="divider-arrow">→</div>
+                    <span class="divider-label">Subset<br>Construction</span>
+                    <div class="divider-arrow">→</div>
+                </div>
+                <div class="viz-panel" id="viz-dfa-panel">
+                    <div class="viz-panel-header">
+                        <h3>Constructed DFA</h3>
+                        <div class="viz-controls">
+                            <button class="viz-btn" id="btn-zoom-in-dfa" title="Zoom In">+</button>
+                            <button class="viz-btn" id="btn-zoom-out-dfa" title="Zoom Out">−</button>
+                            <button class="viz-btn" id="btn-reset-dfa" title="Reset View">⟲</button>
+                        </div>
+                    </div>
+                    <canvas id="canvas-dfa" width="600" height="450"></canvas>
+                </div>
+            </div>
+
+            <!-- String Testing -->
+            <div class="string-test-panel" id="string-test-panel">
+                <h3>🧪 Test a String</h3>
+                <div class="test-input-row">
+                    <input type="text" id="test-string-input" class="text-input" placeholder="Enter a string to test (e.g. aab)">
+                    <button class="btn-primary btn-test" id="btn-test-string">Test</button>
+                </div>
+                <div class="test-result" id="test-result"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
