@@ -52,10 +52,6 @@ Shows final DFA transition table
 
 NFA to DFA conversion is a core concept in automata theory and widely used in compilers and pattern matching systems
 
-📸 Screenshots (Optional)
-
-Add screenshots here for better GitHub presentation
-
 🎓 Use Cases
 📚 Students learning Theory of Computation (TAFL)
 👨‍🏫 Teaching tool for professors
