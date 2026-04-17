@@ -1,9 +1,7 @@
 # TAFLproject01
 🚀 NFA to DFA Converter & Generator
 
-🌐 Live Demo: vipultaflproject2.netlify.app
-
-[vipultaflproject2.netlify.app](https://vipultaflproject2.netlify.app/)
+🌐 Live Demo: [vipultaflproject2.netlify.app](https://vipultaflproject2.netlify.app/)
 
 An interactive web-based tool to design, analyze, and convert Non-Deterministic Finite Automata (NFA) into Deterministic Finite Automata (DFA).
 
